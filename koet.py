@@ -310,13 +310,24 @@ def show_header(koet_h_version, json_version,
 
 def check_os_redhat(os_dictionary):
     dist_str = distro.name() + " " + distro.version()
-    try:
+    # Prefix used to find any entry for this major version family
+    # e.g. "Red Hat Enterprise Linux 9" matches 9.0, 9.1, 9.2, ...
+    major_family = distro.name() + " " + distro.major_version()
+
+    if dist_str in os_dictionary:
+        # Exact match: honour whatever the JSON says (OK or NOK)
         if os_dictionary[dist_str] != 'OK':
             fatal(dist_str + " is not a supported OS for this tool\n")
-    except KeyError:
-        fatal(dist_str + " is not a supported OS for this tool\n")
-    # Use modern (RHEL 8+) RDMA packages for RHEL 8+, RHEL 9, RHEL 10,
-    # and Rocky Linux (which starts at 8).
+    else:
+        # Unknown point release: supported if any entry in this major version
+        # family is marked OK (forward-compatible within a major version)
+        family_ok = any(
+            v == 'OK' for k, v in os_dictionary.items()
+            if k.startswith(major_family)
+        )
+        if not family_ok:
+            fatal(dist_str + " is not a supported OS for this tool\n")
+
     return int(distro.major_version()) >= 8
 
 
