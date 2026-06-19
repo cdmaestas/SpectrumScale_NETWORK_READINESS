@@ -5,7 +5,6 @@ import sys
 import socket
 import datetime
 import subprocess
-import platform
 import shlex
 import time
 from shutil import copyfile
@@ -311,19 +310,15 @@ def show_header(koet_h_version, json_version,
 
 def check_os_redhat(os_dictionary):
     redhat8 = False
-    redhat_distribution = platform.linux_distribution()
-    redhat_distribution_str = redhat_distribution[0] + \
-        " " + redhat_distribution[1]
-    error_message = RED + "QUIT: " + NOCOLOR + " " + \
-        redhat_distribution_str + " is not a supported OS for this tool\n"
+    dist_str = distro.name() + " " + distro.version()
     try:
-        if os_dictionary[redhat_distribution_str] == 'OK':
-            if "8." in redhat_distribution[1]:
+        if os_dictionary[dist_str] == 'OK':
+            if distro.major_version() == '8':
                 redhat8 = True
         else:
-            sys.exit(error_message)
-    except Exception:
-        sys.exit(error_message)
+            fatal(dist_str + " is not a supported OS for this tool\n")
+    except KeyError:
+        fatal(dist_str + " is not a supported OS for this tool\n")
     return redhat8
 
 
