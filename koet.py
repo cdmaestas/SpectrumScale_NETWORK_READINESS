@@ -309,17 +309,15 @@ def show_header(koet_h_version, json_version,
 
 
 def check_os_redhat(os_dictionary):
-    redhat8 = False
     dist_str = distro.name() + " " + distro.version()
     try:
-        if os_dictionary[dist_str] == 'OK':
-            if distro.major_version() == '8':
-                redhat8 = True
-        else:
+        if os_dictionary[dist_str] != 'OK':
             fatal(dist_str + " is not a supported OS for this tool\n")
     except KeyError:
         fatal(dist_str + " is not a supported OS for this tool\n")
-    return redhat8
+    # Use modern (RHEL 8+) RDMA packages for RHEL 8+, RHEL 9, RHEL 10,
+    # and Rocky Linux (which starts at 8).
+    return int(distro.major_version()) >= 8
 
 
 def get_json_versions(os_dictionary, packages_dictionary, packages_rdma_dict):
@@ -341,9 +339,9 @@ def get_json_versions(os_dictionary, packages_dictionary, packages_rdma_dict):
 
 def check_distribution():
     what_dist = distro.distro_release_info()['id']
-    if what_dist in ("redhat", "centos"):
+    if what_dist in ("redhat", "centos", "rocky"):
         return what_dist
-    fatal("this only runs on RedHat at this moment")
+    fatal("this only runs on Red Hat, CentOS, or Rocky Linux\n")
 
 
 def ssh_rpm_is_installed(host, rpm_package):
@@ -1213,7 +1211,7 @@ def main():
     packages_dictionary = load_json("packages.json")
 
     linux_distribution = check_distribution()
-    if linux_distribution in ("redhat", "centos"):
+    if linux_distribution in ("redhat", "centos", "rocky"):
         redhat8 = check_os_redhat(os_dictionary)
     else:
         fatal("this is not a supported Linux distribution for this tool\n")
