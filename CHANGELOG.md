@@ -78,3 +78,14 @@ Changelog:
 - 1.17
     - Removed hardcoded path for ibdev2
     - Removed RPM requirement for RDMA RH8
+
+- 1.18
+    - Modernized koet.py: dropped Python 2 dead code, replaced os.popen with subprocess.run,
+      replaced map/reduce/sqrt with statistics stdlib, used pathlib.Path throughout
+    - Replaced deprecated platform.linux_distribution() with python-distro library
+    - Added RHEL 9.0-9.5, 10.0 and Rocky Linux 8.6-9.5, 10.0 support in supported_OS.json
+    - Added forward-compatibility for unknown point releases via major-version family fallback
+      (e.g. RHEL 9.6, Rocky 9.6 automatically inherit support from the 9.x family)
+    - Added web UI: koet-server.py (Flask backend on 127.0.0.1:5002) and koet-ui.html
+      (IBM Carbon Design System dark theme frontend) for browser-based test configuration,
+      live streaming output, and results visualization with Chart.js charts

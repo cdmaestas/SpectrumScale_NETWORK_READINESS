@@ -5,6 +5,32 @@ This tool attempts to hide much of the complexity of running network measurement
 
 **WARNING:** This is a network stress tool, hence it will stress the network. If you are using the network for some other service while running this tool you might feel service degradation. This tool, as stated on the license, it comes with no warranty of any kind.
 
+## Web UI
+
+A browser-based interface is available for configuring and running tests without using the CLI directly.
+
+**Additional prerequisites for the Web UI:**
+```shell
+pip3 install flask
+```
+
+**Start the web server:**
+```shell
+python3 koet-server.py
+```
+Then open **http://127.0.0.1:5002** in a browser on the same machine.
+
+The web UI provides:
+- **Configure panel** — set KPI thresholds, host IPs, RDMA ports, and edit `hosts.json` directly in the browser
+- **Run panel** — review the full configuration and estimated runtime before starting
+- **Live Output panel** — color-coded streaming terminal output with a phase progress bar; inline confirmation widget handles the `Do you want to continue?` prompt
+- **Results panel** — Chart.js bar charts for throughput and latency per host, plus a KPI pass/fail summary table
+- **Log History panel** — load and review results from any previous run
+
+The web server runs only on `127.0.0.1` (localhost) and is not accessible from other machines.
+
+---
+
 **PREREQUISITES:** Before running this tool you **must** install the software prerequisites. Those are:
 
 * gcc-c++, psmisc, fping, and python3-distro
@@ -19,7 +45,7 @@ Remarks:
 
   - The host where this tool is locally run must be part of the testbed of hosts being tested
   - As the runtime can be long if you plan to disconnect from the system run the tool with either *screen* or *tmux*. Do not use nohup as it would not spawn the subprocesses correclty
-  - This tool runs on RedHat Enterprise Linux 7.5 or newer and 8.0 or newer on x86_64 and ppc64le mixed architectures.
+  - This tool runs on Red Hat Enterprise Linux 7.6+, 8.6+, 9.x, 10.x and Rocky Linux 8.6+, 9.x, 10.x on x86_64 and ppc64le mixed architectures. Unknown point releases within a supported major version are accepted automatically (e.g. RHEL 9.6, Rocky 9.7).
   - SSH root passwordless access must be configured from the node that runs the tool to all the nodes that participate in the tests. This tool will log an error if any node does not meet this requirement.
   - The minimum FPING_COUNT value for a valid ECE test must be 500, and a minimum of 10 (defaults to 500).
   - The minimum PERF_RUNTIME value for a valid ECE test must be 1200, and a minimum of 30 (defaults to 1200).

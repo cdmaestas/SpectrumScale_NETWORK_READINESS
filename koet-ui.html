@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KOET — Network Readiness</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --cds-background:        #161616;
+  --cds-layer-01:          #262626;
+  --cds-layer-02:          #393939;
+  --cds-layer-03:          #525252;
+  --cds-layer-hover-01:    #2e2e2e;
+  --cds-layer-hover-02:    #474747;
+  --cds-border-subtle-01:  #393939;
+  --cds-border-subtle-02:  #525252;
+  --cds-border-strong-01:  #6f6f6f;
+  --cds-text-primary:      #f4f4f4;
+  --cds-text-secondary:    #c6c6c6;
+  --cds-text-placeholder:  #6f6f6f;
+  --cds-text-disabled:     #525252;
+  --cds-link-primary:      #78a9ff;
+  --cds-interactive:       #4589ff;
+  --cds-focus:             #ffffff;
+  --cds-button-primary:    #0f62fe;
+  --cds-button-primary-hover: #0353e9;
+  --cds-button-secondary:  #393939;
+  --cds-button-secondary-hover: #474747;
+  --cds-button-danger:     #da1e28;
+  --cds-button-danger-hover: #b81922;
+  --cds-support-error:     #fa4d56;
+  --cds-support-success:   #42be65;
+  --cds-support-warning:   #f1c21b;
+  --cds-support-info:      #4589ff;
+  --sidebar-width:         256px;
+  --header-height:         48px;
+  --font:                  'IBM Plex Sans', sans-serif;
+  --font-mono:             'IBM Plex Mono', monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font);
+  background: var(--cds-background);
+  color: var(--cds-text-primary);
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ── Header ──────────────────────────────────────────────── */
+.app-header {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: var(--header-height);
+  background: #000;
+  border-bottom: 1px solid var(--cds-border-subtle-01);
+  display: flex; align-items: center; gap: 12px;
+  padding: 0 16px;
+}
+.app-header .logo {
+  font-size: 14px; font-weight: 600; color: var(--cds-text-primary);
+  letter-spacing: 0.01em; white-space: nowrap;
+}
+.app-header .logo span { color: #78a9ff; }
+.header-status {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--cds-text-secondary);
+  margin-left: auto;
+}
+.status-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--cds-border-strong-01);
+  transition: background 0.3s;
+}
+.status-dot.running { background: var(--cds-support-info); animation: pulse 1.5s infinite; }
+.status-dot.done-ok { background: var(--cds-support-success); }
+.status-dot.done-err { background: var(--cds-support-error); }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* ── Sidebar ─────────────────────────────────────────────── */
+.app-sidebar {
+  position: fixed; top: var(--header-height); left: 0; bottom: 0;
+  width: var(--sidebar-width);
+  background: var(--cds-layer-01);
+  border-right: 1px solid var(--cds-border-subtle-01);
+  overflow-y: auto; z-index: 90;
+}
+.sidebar-section { padding: 16px 0 8px; }
+.sidebar-label {
+  padding: 0 16px 8px;
+  font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--cds-text-secondary);
+}
+.nav-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 16px;
+  font-size: 14px; color: var(--cds-text-secondary);
+  cursor: pointer; border-left: 3px solid transparent;
+  transition: background 0.15s, color 0.15s;
+  user-select: none;
+}
+.nav-item:hover { background: var(--cds-layer-hover-01); color: var(--cds-text-primary); }
+.nav-item.active {
+  background: var(--cds-layer-02); color: var(--cds-text-primary);
+  border-left-color: var(--cds-button-primary);
+}
+.nav-item svg { flex-shrink: 0; opacity: 0.7; }
+
+/* ── Main content ────────────────────────────────────────── */
+.app-main {
+  margin-left: var(--sidebar-width);
+  margin-top: var(--header-height);
+  padding: 24px;
+  min-height: calc(100vh - var(--header-height));
+}
+.panel-page { display: none; }
+.panel-page.active { display: block; }
+
+/* ── Panel cards ─────────────────────────────────────────── */
+.panel {
+  background: var(--cds-layer-01);
+  border: 1px solid var(--cds-border-subtle-01);
+  margin-bottom: 24px;
+}
+.panel-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--cds-border-subtle-01);
+  display: flex; align-items: flex-start; justify-content: space-between;
+}
+.panel-header h3 { font-size: 16px; font-weight: 400; }
+.panel-header p { font-size: 12px; color: var(--cds-text-secondary); margin-top: 2px; }
+.panel-body { padding: 24px; }
+
+/* ── Forms ───────────────────────────────────────────────── */
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
+.form-group { margin-bottom: 24px; }
+.form-label {
+  display: block; margin-bottom: 6px;
+  font-size: 12px; font-weight: 500; color: var(--cds-text-secondary);
+}
+.form-label .req { color: var(--cds-support-error); }
+.form-hint { font-size: 11px; color: var(--cds-text-placeholder); margin-top: 4px; }
+.form-input, .form-select, .form-textarea {
+  width: 100%; padding: 10px 12px;
+  background: var(--cds-layer-02);
+  border: 1px solid var(--cds-border-subtle-02);
+  color: var(--cds-text-primary);
+  font-family: var(--font); font-size: 14px;
+  outline: none; transition: border-color 0.15s;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--cds-focus);
+  outline: 2px solid var(--cds-focus); outline-offset: -2px;
+}
+.form-input::placeholder { color: var(--cds-text-placeholder); }
+.form-textarea { font-family: var(--font-mono); font-size: 12px; resize: vertical; }
+.checkbox-item { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
+.checkbox-item input[type="checkbox"] { margin-top: 2px; accent-color: var(--cds-button-primary); }
+.checkbox-item .checkbox-label { font-size: 14px; }
+.checkbox-item .checkbox-desc { font-size: 12px; color: var(--cds-text-secondary); margin-top: 2px; }
+
+/* ── Buttons ─────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 24px; font-size: 14px; font-weight: 400;
+  font-family: var(--font); border: none; cursor: pointer;
+  transition: background 0.15s; white-space: nowrap;
+}
+.btn-sm { padding: 6px 14px; font-size: 12px; }
+.btn-primary { background: var(--cds-button-primary); color: #fff; }
+.btn-primary:hover:not(:disabled) { background: var(--cds-button-primary-hover); }
+.btn-secondary { background: var(--cds-button-secondary); color: var(--cds-text-primary); }
+.btn-secondary:hover:not(:disabled) { background: var(--cds-button-secondary-hover); }
+.btn-danger { background: var(--cds-button-danger); color: #fff; }
+.btn-danger:hover:not(:disabled) { background: var(--cds-button-danger-hover); }
+.btn-ghost { background: transparent; color: var(--cds-link-primary); padding-left: 0; }
+.btn-ghost:hover:not(:disabled) { color: #a6c8ff; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-group { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+/* ── Terminal ────────────────────────────────────────────── */
+.terminal {
+  background: #000; border: 1px solid var(--cds-border-subtle-01);
+  font-family: var(--font-mono); font-size: 12px;
+  padding: 16px; overflow-y: auto; line-height: 1.7;
+  height: calc(100vh - 280px); min-height: 300px;
+  scroll-behavior: smooth;
+}
+.terminal-line { word-break: break-all; }
+.terminal-line--ok      { color: #42be65; }
+.terminal-line--error   { color: #fa4d56; }
+.terminal-line--warning { color: #f1c21b; }
+.terminal-line--info    { color: #78a9ff; }
+.terminal-line--quit    { color: #fa4d56; font-weight: 600; }
+.terminal-line--normal  { color: #c6c6c6; }
+.terminal-line--prompt  { color: #f1c21b; font-style: italic; }
+.terminal-cursor::after { content: '█'; color: #fff; animation: blink 1s step-end infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+/* ── Confirm widget (inline in terminal) ──────────────────── */
+.confirm-card {
+  margin: 12px 0; padding: 16px;
+  background: #1a1a00; border: 1px solid var(--cds-support-warning);
+  border-left: 4px solid var(--cds-support-warning);
+}
+.confirm-card p { color: var(--cds-text-primary); margin-bottom: 12px; }
+
+/* ── Phase progress bar ──────────────────────────────────── */
+.phase-bar { display: flex; gap: 0; margin-bottom: 16px; overflow: hidden; }
+.phase-seg {
+  flex: 1; height: 6px;
+  background: var(--cds-layer-02);
+  border-right: 1px solid var(--cds-background);
+  transition: background 0.4s;
+}
+.phase-seg.done { background: var(--cds-support-success); }
+.phase-seg.active { background: var(--cds-support-info); animation: pulse 1.5s infinite; }
+.phase-label { font-size: 11px; color: var(--cds-text-secondary); margin-bottom: 6px; }
+
+/* ── Config summary (Run panel) ──────────────────────────── */
+.kv-grid { display: grid; grid-template-columns: 200px 1fr; gap: 4px 16px; }
+.kv-key { color: var(--cds-text-secondary); font-size: 12px; padding: 4px 0; }
+.kv-val { color: var(--cds-text-primary); font-size: 12px; padding: 4px 0; font-family: var(--font-mono); }
+
+/* ── Tags / badges ───────────────────────────────────────── */
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 2px 8px; font-size: 11px; font-weight: 600;
+  letter-spacing: 0.05em; text-transform: uppercase;
+}
+.badge-pass { background: rgba(66,190,101,0.15); color: #42be65; }
+.badge-fail { background: rgba(250,77,86,0.15); color: #fa4d56; }
+.badge-warn { background: rgba(241,194,27,0.15); color: #f1c21b; }
+.badge-info { background: rgba(69,137,255,0.15); color: #78a9ff; }
+
+/* ── Results table ───────────────────────────────────────── */
+.results-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.results-table th {
+  text-align: left; padding: 10px 12px;
+  background: var(--cds-layer-02);
+  color: var(--cds-text-secondary); font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--cds-border-subtle-02);
+}
+.results-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--cds-border-subtle-01);
+  font-family: var(--font-mono); font-size: 12px;
+}
+.results-table tr:last-child td { border-bottom: none; }
+.results-table tr:hover td { background: var(--cds-layer-hover-01); }
+
+/* ── Chart wrappers ──────────────────────────────────────── */
+.chart-wrap { position: relative; }
+.chart-title { font-size: 13px; color: var(--cds-text-secondary); margin-bottom: 12px; }
+
+/* ── Log history table ───────────────────────────────────── */
+.log-table { width: 100%; border-collapse: collapse; }
+.log-table th, .log-table td { padding: 10px 16px; text-align: left; font-size: 13px; }
+.log-table th {
+  background: var(--cds-layer-02); color: var(--cds-text-secondary);
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--cds-border-subtle-02);
+}
+.log-table td { border-bottom: 1px solid var(--cds-border-subtle-01); }
+.log-table tr:hover td { background: var(--cds-layer-hover-01); }
+
+/* ── Estimated runtime ───────────────────────────────────── */
+.runtime-badge {
+  display: inline-block; padding: 6px 14px;
+  background: var(--cds-layer-02);
+  font-family: var(--font-mono); font-size: 13px;
+  color: var(--cds-support-warning);
+}
+
+/* ── Empty state ─────────────────────────────────────────── */
+.empty-state {
+  padding: 48px 24px; text-align: center;
+  color: var(--cds-text-placeholder); font-size: 14px;
+}
+.empty-state svg { display: block; margin: 0 auto 16px; opacity: 0.3; }
+
+/* ── Divider ─────────────────────────────────────────────── */
+hr.divider { border: none; border-top: 1px solid var(--cds-border-subtle-01); margin: 24px 0; }
+</style>
+</head>
+<body>
+
+<!-- ── Header ─────────────────────────────────────────────── -->
+<header class="app-header">
+  <div class="logo">IBM <span>Storage Scale</span> — KOET Network Readiness</div>
+  <div class="header-status">
+    <div class="status-dot" id="status-dot"></div>
+    <span id="status-text">Idle</span>
+  </div>
+</header>
+
+<!-- ── Sidebar ────────────────────────────────────────────── -->
+<nav class="app-sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-label">Workflow</div>
+    <div class="nav-item active" onclick="showPanel('configure')" id="nav-configure">
+      <svg width="16" height="16" viewBox="0 0 32 32" fill="currentColor"><path d="M27 16.76V11h-2v5.76a4 4 0 000 6.48V28h2v-4.76a4 4 0 000-6.48zM26 22a2 2 0 110-4 2 2 0 010 4zM19 4.76V2h-2v2.76a4 4 0 000 6.48V28h2V13.24a4 4 0 000-6.48zM18 10a2 2 0 110-4 2 2 0 010 4zM11 18.76V2H9v16.76a4 4 0 000 6.48V28h2v-4.76a4 4 0 000-6.48zM10 24a2 2 0 110-4 2 2 0 010 4z"/></svg>
+      Configure
+    </div>
+    <div class="nav-item" onclick="showPanel('run')" id="nav-run">
+      <svg width="16" height="16" viewBox="0 0 32 32" fill="currentColor"><path d="M7 28a1 1 0 01-1-1V5a1 1 0 011.482-.876l20 11a1 1 0 010 1.752l-20 11A1 1 0 017 28z"/></svg>
+      Run Test
+    </div>
+    <div class="nav-item" onclick="showPanel('output')" id="nav-output">
+      <svg width="16" height="16" viewBox="0 0 32 32" fill="currentColor"><path d="M26 6H6a2 2 0 00-2 2v16a2 2 0 002 2h20a2 2 0 002-2V8a2 2 0 00-2-2zm0 18H6V8h20zm-6-8h-4v-4h-2v4h-4l5 5z"/></svg>
+      Live Output
+    </div>
+    <div class="nav-item" onclick="showPanel('results')" id="nav-results">
+      <svg width="16" height="16" viewBox="0 0 32 32" fill="currentColor"><path d="M4 28h28v2H4zM8 20h4v6H8zm6-8h4v14h-4zm6 3h4v11h-4zm6-9h4v20h-4z"/></svg>
+      Results
+    </div>
+    <div class="nav-item" onclick="showPanel('logs')" id="nav-logs">
+      <svg width="16" height="16" viewBox="0 0 32 32" fill="currentColor"><path d="M28 26H6V6h22v2h2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v20a2 2 0 002 2h22a2 2 0 002-2v-2h-2zM10 14h12v2H10zm0 6h8v2h-8zm0-12h12v2H10z"/></svg>
+      Log History
+    </div>
+  </div>
+</nav>
+
+<!-- ── Main content ───────────────────────────────────────── -->
+<main class="app-main">
+
+  <!-- ── Configure Panel ────────────────────────────────── -->
+  <div class="panel-page active" id="panel-configure">
+    <div class="panel">
+      <div class="panel-header">
+        <div><h3>Test Parameters</h3><p>KPI thresholds and execution settings for the network readiness test</p></div>
+      </div>
+      <div class="panel-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Latency KPI (msec)</label>
+            <input type="number" class="form-input" id="cfg-latency" value="1.0" step="0.1" min="0.1">
+            <div class="form-hint">Certification requires ≤ 1.0 msec average ICMP latency</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Min Throughput (MB/s)</label>
+            <input type="number" class="form-input" id="cfg-throughput" value="2000" min="1">
+            <div class="form-hint">Certification requires ≥ 2000 MB/s per node</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">fping Count (pings per node)</label>
+            <input type="number" class="form-input" id="cfg-fping" value="500" min="2">
+            <div class="form-hint">Certification requires ≥ 500 pings per test</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Perf Runtime (seconds)</label>
+            <input type="number" class="form-input" id="cfg-runtime" value="1200" min="10">
+            <div class="form-hint">Certification requires ≥ 1200 seconds per throughput test</div>
+          </div>
+        </div>
+        <hr class="divider">
+        <div class="form-group">
+          <label class="form-label">Host IPs (CSV)</label>
+          <input type="text" class="form-input" id="cfg-hosts" placeholder="10.0.0.1,10.0.0.2,10.0.0.3  —  leave blank to use hosts.json">
+          <div class="form-hint">2–64 IPv4 addresses separated by commas. Leave blank to use the hosts.json file below.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">RDMA Ports (CSV)</label>
+          <input type="text" class="form-input" id="cfg-rdma" placeholder="ib0,ib1  —  leave blank to disable RDMA testing">
+          <div class="form-hint">OS device names only (ib0, ib1, …). Leave blank for Ethernet-only testing.</div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="checkbox-item">
+              <input type="checkbox" id="cfg-norpm">
+              <div>
+                <div class="checkbox-label">Skip RPM prerequisite check</div>
+                <div class="checkbox-desc">Use only if prerequisites are installed without RPM</div>
+              </div>
+            </label>
+          </div>
+          <div class="form-group">
+            <label class="checkbox-item">
+              <input type="checkbox" id="cfg-savehosts">
+              <div>
+                <div class="checkbox-label">Save hosts to hosts.json</div>
+                <div class="checkbox-desc">Overwrite hosts.json with the IPs entered above</div>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <div><h3>hosts.json Editor</h3><p>Manage the saved list of cluster node IPs</p></div>
+        <div class="btn-group">
+          <button class="btn btn-secondary btn-sm" onclick="loadHostsJson()">Load</button>
+          <button class="btn btn-primary btn-sm" onclick="saveHostsJson()">Save</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <textarea class="form-textarea" id="hosts-editor" rows="8" placeholder='{"10.0.0.1": "ECE", "10.0.0.2": "ECE"}'></textarea>
+        <div class="form-hint" style="margin-top:8px" id="hosts-status"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Run Panel ──────────────────────────────────────── -->
+  <div class="panel-page" id="panel-run">
+    <div class="panel">
+      <div class="panel-header">
+        <div><h3>Test Configuration Summary</h3><p>Review settings before starting the test</p></div>
+      </div>
+      <div class="panel-body">
+        <div class="kv-grid" id="config-summary"></div>
+        <hr class="divider">
+        <div class="form-group">
+          <label class="form-label">Estimated Runtime</label>
+          <div class="runtime-badge" id="runtime-estimate">—</div>
+          <div class="form-hint" style="margin-top:6px">Actual time may vary depending on network conditions and node count</div>
+        </div>
+        <hr class="divider">
+        <div class="btn-group">
+          <button class="btn btn-primary" id="btn-start" onclick="startRun()">
+            <svg width="16" height="16" viewBox="0 0 32 32" fill="currentColor"><path d="M7 28a1 1 0 01-1-1V5a1 1 0 011.482-.876l20 11a1 1 0 010 1.752l-20 11A1 1 0 017 28z"/></svg>
+            Start Test
+          </button>
+          <button class="btn btn-danger" id="btn-stop" onclick="stopRun()" disabled>
+            <svg width="16" height="16" viewBox="0 0 32 32" fill="currentColor"><rect x="6" y="6" width="20" height="20"/></svg>
+            Stop
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Live Output Panel ──────────────────────────────── -->
+  <div class="panel-page" id="panel-output">
+    <div class="panel">
+      <div class="panel-header">
+        <div><h3>Live Output</h3><p>Real-time output from koet.py</p></div>
+        <button class="btn btn-secondary btn-sm" onclick="clearTerminal()">Clear</button>
+      </div>
+      <div class="panel-body" style="padding-bottom:16px">
+        <div class="phase-label" id="phase-label">Waiting for test to start…</div>
+        <div class="phase-bar" id="phase-bar"></div>
+        <div class="terminal" id="terminal"><div class="terminal-line terminal-cursor"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Results Panel ──────────────────────────────────── -->
+  <div class="panel-page" id="panel-results">
+    <div id="results-empty" class="panel">
+      <div class="empty-state">
+        <svg width="48" height="48" viewBox="0 0 32 32" fill="currentColor"><path d="M4 28h28v2H4zM8 20h4v6H8zm6-8h4v14h-4zm6 3h4v11h-4zm6-9h4v20h-4z"/></svg>
+        No results loaded. Run a test or load a previous run from Log History.
+      </div>
+    </div>
+    <div id="results-content" style="display:none">
+      <div class="panel">
+        <div class="panel-header">
+          <div><h3>KPI Summary</h3><p id="results-log-dir" style="font-family:var(--font-mono);font-size:11px"></p></div>
+          <div id="overall-badge"></div>
+        </div>
+        <div class="panel-body" style="padding:0">
+          <table class="results-table">
+            <thead><tr>
+              <th>Host</th>
+              <th>Throughput (MB/s)</th>
+              <th>Throughput KPI</th>
+              <th>Avg Latency (msec)</th>
+              <th>Latency KPI</th>
+            </tr></thead>
+            <tbody id="kpi-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><div><h3>Throughput per Client</h3></div></div>
+        <div class="panel-body">
+          <div class="chart-wrap" style="height:260px">
+            <canvas id="chart-throughput"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><div><h3>ICMP Latency per Source Host</h3></div></div>
+        <div class="panel-body">
+          <div class="chart-wrap" style="height:260px">
+            <canvas id="chart-latency"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" id="nsd-panel" style="display:none">
+        <div class="panel-header"><div><h3>NSD Network Latency</h3></div></div>
+        <div class="panel-body">
+          <div class="chart-wrap" style="height:220px">
+            <canvas id="chart-nsd"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Log History Panel ──────────────────────────────── -->
+  <div class="panel-page" id="panel-logs">
+    <div class="panel">
+      <div class="panel-header">
+        <div><h3>Previous Runs</h3></div>
+        <button class="btn btn-secondary btn-sm" onclick="loadLogHistory()">Refresh</button>
+      </div>
+      <div class="panel-body" style="padding:0">
+        <div id="log-history-content">
+          <div class="empty-state">No previous runs found.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const API = 'http://127.0.0.1:5002';
+
+// ── Global state ────────────────────────────────────────────
+const state = {
+  config: {
+    latency: 1.0, fping_count: 500, perf_runtime: 1200, min_throughput: 2000,
+    hosts: '', rdma: '', rpm_check_disabled: false, save_hosts: false,
+  },
+  running: false,
+  awaiting_confirm: false,
+  log_dir: null,
+  results: null,
+  activePanel: 'configure',
+  phaseIndex: -1,
+  logHistory: [],
+};
+
+const PHASES = [
+  'File permissions', 'Load config', 'OS check', 'Validate hosts',
+  'Confirm', 'SSH check', 'Firewall / ports', 'RDMA check',
+  'Create log dirs', 'Latency test', 'Throughput test', 'Parse results', 'Summary',
+];
+
+const PHASE_KEYWORDS = [
+  'file permission', 'JSON', 'distribution', 'IPv4',
+  'Do you want to continue', 'SSH', 'firewalld', 'RDMA',
+  'Creating log', 'fping', 'nsdperf', 'Results for', 'summary',
+];
+
+// Chart instances
+let chartTP = null, chartLat = null, chartNSD = null;
+
+// ── Panel navigation ────────────────────────────────────────
+function showPanel(id) {
+  document.querySelectorAll('.panel-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  document.getElementById('nav-' + id).classList.add('active');
+  state.activePanel = id;
+
+  if (id === 'run') refreshRunSummary();
+  if (id === 'logs') loadLogHistory();
+}
+
+// ── Build phase bar ─────────────────────────────────────────
+(function buildPhaseBar() {
+  const bar = document.getElementById('phase-bar');
+  PHASES.forEach((_, i) => {
+    const seg = document.createElement('div');
+    seg.className = 'phase-seg';
+    seg.id = 'phase-' + i;
+    bar.appendChild(seg);
+  });
+})();
+
+function setPhase(idx) {
+  if (idx <= state.phaseIndex) return;
+  state.phaseIndex = idx;
+  PHASES.forEach((name, i) => {
+    const seg = document.getElementById('phase-' + i);
+    if (!seg) return;
+    seg.className = 'phase-seg' + (i < idx ? ' done' : i === idx ? ' active' : '');
+  });
+  const label = document.getElementById('phase-label');
+  if (label && idx >= 0 && idx < PHASES.length) label.textContent = PHASES[idx];
+}
+
+function advancePhaseBar(line) {
+  const lower = line.toLowerCase();
+  PHASE_KEYWORDS.forEach((kw, i) => {
+    if (lower.includes(kw.toLowerCase()) && i > state.phaseIndex) setPhase(i);
+  });
+}
+
+// ── Terminal ────────────────────────────────────────────────
+function appendTerminalLine(type, text) {
+  const term = document.getElementById('terminal');
+  // Remove cursor from last line
+  term.querySelectorAll('.terminal-cursor').forEach(el => el.classList.remove('terminal-cursor'));
+  const div = document.createElement('div');
+  div.className = `terminal-line terminal-line--${type}`;
+  div.textContent = text;
+  term.appendChild(div);
+  // Re-add cursor
+  const cursor = document.createElement('div');
+  cursor.className = 'terminal-line terminal-cursor';
+  term.appendChild(cursor);
+  term.scrollTop = term.scrollHeight;
+  state.terminalLines.push({ type, text });
+}
+
+function clearTerminal() {
+  const term = document.getElementById('terminal');
+  term.innerHTML = '<div class="terminal-line terminal-cursor"></div>';
+  state.terminalLines = [];
+  state.phaseIndex = -1;
+  PHASES.forEach((_, i) => {
+    const seg = document.getElementById('phase-' + i);
+    if (seg) seg.className = 'phase-seg';
+  });
+  document.getElementById('phase-label').textContent = 'Waiting for test to start…';
+}
+
+// ── Inline confirm widget ───────────────────────────────────
+function showConfirmPrompt() {
+  const term = document.getElementById('terminal');
+  // Remove existing card if any
+  document.getElementById('confirm-card')?.remove();
+
+  const card = document.createElement('div');
+  card.className = 'confirm-card';
+  card.id = 'confirm-card';
+  card.innerHTML = `
+    <p>KOET has displayed the test parameters and is waiting for confirmation. Continue with the test?</p>
+    <div class="btn-group">
+      <button class="btn btn-primary btn-sm" onclick="sendConfirm('y')">Yes, run the test</button>
+      <button class="btn btn-secondary btn-sm" onclick="sendConfirm('n')">No, abort</button>
+    </div>`;
+  term.appendChild(card);
+  term.scrollTop = term.scrollHeight;
+}
+
+async function sendConfirm(answer) {
+  document.getElementById('confirm-card')?.remove();
+  try {
+    await fetch(`${API}/api/confirm`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ answer }),
+    });
+  } catch (e) {
+    appendTerminalLine('error', `[UI] Failed to send confirmation: ${e.message}`);
+  }
+}
+
+// ── SSE streaming ───────────────────────────────────────────
+let _es = null;
+
+function connectStream() {
+  if (_es) { _es.close(); _es = null; }
+  _es = new EventSource(`${API}/api/stream`);
+  _es.onmessage = function(e) {
+    let msg;
+    try { msg = JSON.parse(e.data); } catch { return; }
+    handleSseMessage(msg);
+  };
+  _es.onerror = function() {
+    // SSE connection closed (stream ended) — this is normal
+    _es.close(); _es = null;
+  };
+}
+
+function handleSseMessage(msg) {
+  if (msg.type === 'prompt') {
+    appendTerminalLine('prompt', msg.line);
+    showConfirmPrompt();
+    state.awaiting_confirm = true;
+    return;
+  }
+  if (msg.type === 'done') {
+    handleRunDone(JSON.parse(msg.line));
+    return;
+  }
+  appendTerminalLine(msg.type, msg.line);
+  advancePhaseBar(msg.line);
+}
+
+function handleRunDone(info) {
+  state.running = false;
+  state.log_dir = info.log_dir || null;
+  const ok = info.returncode === 0;
+
+  // Mark all phases done
+  if (ok) PHASES.forEach((_, i) => setPhase(i));
+
+  updateStatusDot(ok ? 'done-ok' : 'done-err', ok ? 'Passed' : 'Failed');
+  updateRunButtons(false);
+  appendTerminalLine(ok ? 'ok' : 'error',
+    `[KOET exited with code ${info.returncode}]`);
+
+  // Auto-load results after a short delay then switch panel
+  if (info.log_dir) {
+    setTimeout(() => {
+      loadResults(info.log_dir).then(() => showPanel('results'));
+    }, 800);
+  }
+}
+
+// ── Run management ──────────────────────────────────────────
+function readConfig() {
+  return {
+    latency: parseFloat(document.getElementById('cfg-latency').value) || 1.0,
+    fping_count: parseInt(document.getElementById('cfg-fping').value) || 500,
+    perf_runtime: parseInt(document.getElementById('cfg-runtime').value) || 1200,
+    min_throughput: parseInt(document.getElementById('cfg-throughput').value) || 2000,
+    hosts: document.getElementById('cfg-hosts').value.trim(),
+    rdma: document.getElementById('cfg-rdma').value.trim(),
+    rpm_check_disabled: document.getElementById('cfg-norpm').checked,
+    save_hosts: document.getElementById('cfg-savehosts').checked,
+  };
+}
+
+async function startRun() {
+  const cfg = readConfig();
+  Object.assign(state.config, cfg);
+
+  try {
+    const res = await fetch(`${API}/api/run`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(cfg),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      alert('Could not start: ' + (data.error || res.status));
+      return;
+    }
+  } catch (e) {
+    alert('Cannot reach backend: ' + e.message);
+    return;
+  }
+
+  state.running = true;
+  state.phaseIndex = -1;
+  clearTerminal();
+  updateRunButtons(true);
+  updateStatusDot('running', 'Running…');
+  showPanel('output');
+  connectStream();
+}
+
+async function stopRun() {
+  if (!confirm('Stop the running test?')) return;
+  try {
+    await fetch(`${API}/api/stop`, { method: 'POST' });
+  } catch (e) {
+    appendTerminalLine('error', `[UI] Stop failed: ${e.message}`);
+  }
+}
+
+function updateRunButtons(running) {
+  document.getElementById('btn-start').disabled = running;
+  document.getElementById('btn-stop').disabled = !running;
+}
+
+// ── Status indicator ────────────────────────────────────────
+function updateStatusDot(cls, text) {
+  const dot = document.getElementById('status-dot');
+  const label = document.getElementById('status-text');
+  dot.className = 'status-dot ' + cls;
+  label.textContent = text;
+}
+
+// ── Run summary panel ───────────────────────────────────────
+function refreshRunSummary() {
+  const cfg = readConfig();
+  const hostCount = cfg.hosts
+    ? cfg.hosts.split(',').filter(Boolean).length
+    : '(from hosts.json)';
+  const n = typeof hostCount === 'number' ? hostCount : 2;
+  const mins = typeof n === 'number'
+    ? Math.max(Math.ceil((n * cfg.fping_count + (n + 1) * (20 + cfg.perf_runtime)) / 60), 2)
+    : '—';
+
+  const rows = [
+    ['Latency KPI', cfg.latency + ' msec'],
+    ['Min Throughput', cfg.min_throughput + ' MB/s'],
+    ['fping Count', cfg.fping_count + ' pings/node'],
+    ['Perf Runtime', cfg.perf_runtime + ' seconds'],
+    ['Hosts', cfg.hosts || '(hosts.json)'],
+    ['RDMA Ports', cfg.rdma || 'Disabled'],
+    ['Skip RPM Check', cfg.rpm_check_disabled ? 'Yes' : 'No'],
+    ['Save Hosts', cfg.save_hosts ? 'Yes' : 'No'],
+  ];
+
+  const grid = document.getElementById('config-summary');
+  grid.innerHTML = rows.map(([k, v]) =>
+    `<div class="kv-key">${k}</div><div class="kv-val">${v}</div>`).join('');
+
+  document.getElementById('runtime-estimate').textContent =
+    `≈ ${mins} minute${mins === 1 ? '' : 's'}`;
+}
+
+// ── Hosts JSON editor ───────────────────────────────────────
+async function loadHostsJson() {
+  try {
+    const res = await fetch(`${API}/api/hosts`);
+    const data = await res.json();
+    document.getElementById('hosts-editor').value = JSON.stringify(data, null, 2);
+    document.getElementById('hosts-status').textContent = 'Loaded from hosts.json';
+    document.getElementById('hosts-status').style.color = 'var(--cds-support-success)';
+  } catch (e) {
+    document.getElementById('hosts-status').textContent = 'Failed: ' + e.message;
+    document.getElementById('hosts-status').style.color = 'var(--cds-support-error)';
+  }
+}
+
+async function saveHostsJson() {
+  const raw = document.getElementById('hosts-editor').value.trim();
+  let parsed;
+  try { parsed = JSON.parse(raw); } catch (e) {
+    document.getElementById('hosts-status').textContent = 'Invalid JSON: ' + e.message;
+    document.getElementById('hosts-status').style.color = 'var(--cds-support-error)';
+    return;
+  }
+  try {
+    const res = await fetch(`${API}/api/hosts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(parsed),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || res.status);
+    document.getElementById('hosts-status').textContent = 'Saved to hosts.json';
+    document.getElementById('hosts-status').style.color = 'var(--cds-support-success)';
+  } catch (e) {
+    document.getElementById('hosts-status').textContent = 'Save failed: ' + e.message;
+    document.getElementById('hosts-status').style.color = 'var(--cds-support-error)';
+  }
+}
+
+// ── Log history ─────────────────────────────────────────────
+async function loadLogHistory() {
+  try {
+    const res = await fetch(`${API}/api/logs`);
+    const dirs = await res.json();
+    state.logHistory = dirs;
+    renderLogHistory(dirs);
+  } catch (e) {
+    document.getElementById('log-history-content').innerHTML =
+      `<div class="empty-state">Cannot reach backend: ${e.message}</div>`;
+  }
+}
+
+function renderLogHistory(dirs) {
+  const el = document.getElementById('log-history-content');
+  if (!dirs.length) {
+    el.innerHTML = '<div class="empty-state">No previous runs found.</div>';
+    return;
+  }
+  el.innerHTML = `<table class="log-table">
+    <thead><tr><th>Run Timestamp</th><th>Actions</th></tr></thead>
+    <tbody>${dirs.map(d => `
+      <tr>
+        <td style="font-family:var(--font-mono)">${d}</td>
+        <td><button class="btn btn-ghost btn-sm" onclick="loadResults('${d}').then(()=>showPanel('results'))">Load Results →</button></td>
+      </tr>`).join('')}
+    </tbody></table>`;
+}
+
+// ── Results ──────────────────────────────────────────────────
+async function loadResults(logDir) {
+  const param = encodeURIComponent(logDir);
+  try {
+    const res = await fetch(`${API}/api/results?log_dir=${param}`);
+    if (!res.ok) {
+      const err = await res.json();
+      alert('Results error: ' + (err.error || res.status));
+      return;
+    }
+    const data = await res.json();
+    state.results = data;
+    renderResults(data);
+  } catch (e) {
+    alert('Cannot load results: ' + e.message);
+  }
+}
+
+function renderResults(data) {
+  document.getElementById('results-empty').style.display = 'none';
+  document.getElementById('results-content').style.display = 'block';
+  document.getElementById('results-log-dir').textContent = data.log_dir || '';
+
+  const passed = data.summary?.passed;
+  document.getElementById('overall-badge').innerHTML =
+    `<span class="badge ${passed ? 'badge-pass' : 'badge-fail'}">${passed ? '✓ PASSED' : '✗ FAILED'}</span>`;
+
+  renderKpiTable(data);
+  renderThroughputChart(data.throughput);
+  renderLatencyChart(data.latency);
+  if (data.nsd_latency?.hosts?.length) {
+    document.getElementById('nsd-panel').style.display = '';
+    renderNsdChart(data.nsd_latency);
+  }
+}
+
+function renderKpiTable(data) {
+  const tbody = document.getElementById('kpi-table-body');
+  const tp = data.throughput || {};
+  const lat = data.latency || {};
+
+  // Build a map by host
+  const tpMap = {};
+  (tp.hosts || []).forEach((h, i) => {
+    tpMap[h] = { val: tp.values_mbps?.[i], pass: tp.pass?.[i] };
+  });
+  const latMap = {};
+  (lat.hosts || []).forEach((h, i) => {
+    latMap[h] = { val: lat.mean_msec?.[i], pass: lat.pass?.[i] };
+  });
+
+  const allHosts = [...new Set([...Object.keys(tpMap), ...Object.keys(latMap)])];
+
+  tbody.innerHTML = allHosts.map(h => {
+    const t = tpMap[h] || {};
+    const l = latMap[h] || {};
+    return `<tr>
+      <td>${h}</td>
+      <td>${t.val !== undefined ? Number(t.val).toFixed(0) : '—'}</td>
+      <td>${t.pass !== undefined ? `<span class="badge ${t.pass ? 'badge-pass' : 'badge-fail'}">${t.pass ? 'PASS' : 'FAIL'}</span>` : '—'}</td>
+      <td>${l.val !== undefined ? Number(l.val).toFixed(3) : '—'}</td>
+      <td>${l.pass !== undefined ? `<span class="badge ${l.pass ? 'badge-pass' : 'badge-fail'}">${l.pass ? 'PASS' : 'FAIL'}</span>` : '—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function chartColors(values, kpi) {
+  return values.map(v => v >= kpi ? 'rgba(66,190,101,0.75)' : 'rgba(250,77,86,0.75)');
+}
+
+function renderThroughputChart(tp) {
+  const ctx = document.getElementById('chart-throughput');
+  if (!tp?.hosts?.length) return;
+  if (chartTP) { chartTP.destroy(); chartTP = null; }
+
+  const colors = tp.hosts.map((h, i) =>
+    h === 'all at the same time'
+      ? 'rgba(69,137,255,0.75)'
+      : (tp.values_mbps[i] >= tp.kpi_mbps ? 'rgba(66,190,101,0.75)' : 'rgba(250,77,86,0.75)')
+  );
+
+  chartTP = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: tp.hosts,
+      datasets: [{
+        label: 'Throughput (MB/s)',
+        data: tp.values_mbps,
+        backgroundColor: colors,
+        borderWidth: 0,
+      }],
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        annotation: {},
+        tooltip: {
+          callbacks: {
+            afterLabel: (ctx) => `KPI: ${tp.kpi_mbps} MB/s`,
+          },
+        },
+      },
+      scales: {
+        x: {
+          grid: { color: '#393939' },
+          ticks: { color: '#c6c6c6', font: { family: 'IBM Plex Mono', size: 11 } },
+        },
+        y: {
+          grid: { color: '#393939' },
+          ticks: { color: '#c6c6c6', font: { family: 'IBM Plex Mono', size: 11 } },
+        },
+      },
+    },
+  });
+}
+
+function renderLatencyChart(lat) {
+  const ctx = document.getElementById('chart-latency');
+  if (!lat?.hosts?.length) return;
+  if (chartLat) { chartLat.destroy(); chartLat = null; }
+
+  chartLat = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: lat.hosts,
+      datasets: [
+        { label: 'Mean', data: lat.mean_msec, backgroundColor: 'rgba(69,137,255,0.75)', borderWidth: 0 },
+        { label: 'Max',  data: lat.max_msec,  backgroundColor: 'rgba(250,77,86,0.6)',   borderWidth: 0 },
+        { label: 'Min',  data: lat.min_msec,  backgroundColor: 'rgba(66,190,101,0.6)',  borderWidth: 0 },
+        { label: 'StdDev', data: lat.stddev_msec, backgroundColor: 'rgba(241,194,27,0.6)', borderWidth: 0 },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#c6c6c6', font: { family: 'IBM Plex Sans', size: 12 } } } },
+      scales: {
+        x: { grid: { color: '#393939' }, ticks: { color: '#c6c6c6', font: { family: 'IBM Plex Mono', size: 11 } } },
+        y: { grid: { color: '#393939' }, ticks: { color: '#c6c6c6', font: { family: 'IBM Plex Mono', size: 11 } },
+             title: { display: true, text: 'msec', color: '#6f6f6f' } },
+      },
+    },
+  });
+}
+
+function renderNsdChart(nsd) {
+  const ctx = document.getElementById('chart-nsd');
+  if (!nsd?.hosts?.length) return;
+  if (chartNSD) { chartNSD.destroy(); chartNSD = null; }
+  chartNSD = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: nsd.hosts,
+      datasets: [{ label: 'NSD Latency (msec)', data: nsd.mean_msec,
+        backgroundColor: 'rgba(69,137,255,0.75)', borderWidth: 0 }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: '#393939' }, ticks: { color: '#c6c6c6', font: { family: 'IBM Plex Mono', size: 11 } } },
+        y: { grid: { color: '#393939' }, ticks: { color: '#c6c6c6', font: { family: 'IBM Plex Mono', size: 11 } } },
+      },
+    },
+  });
+}
+
+// ── Init ────────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  loadHostsJson();
+  // Poll status every 5s to sync if page was refreshed mid-run
+  setInterval(async () => {
+    try {
+      const res = await fetch(`${API}/api/status`);
+      const s = await res.json();
+      if (s.running && !state.running) {
+        state.running = true;
+        updateRunButtons(true);
+        updateStatusDot('running', 'Running…');
+        connectStream();
+      }
+    } catch (_) {}
+  }, 5000);
+});
+</script>
+</body>
+</html>
