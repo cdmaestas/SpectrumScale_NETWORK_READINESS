@@ -8,10 +8,7 @@ Then open:   http://127.0.0.1:5002
 """
 
 import csv
-import glob
 import json
-import math
-import os
 import re
 import signal
 import socket
@@ -92,11 +89,16 @@ def classify_line(line):
     s = line.strip()
     # Strip ANSI escape codes before prefix check
     s = re.sub(r'\033\[[0-9;]*m', '', s)
-    if s.startswith("OK:"):      return "ok"
-    if s.startswith("ERROR:"):   return "error"
-    if s.startswith("WARNING:"): return "warning"
-    if s.startswith("INFO:"):    return "info"
-    if s.startswith("QUIT:"):    return "quit"
+    if s.startswith("OK:"):
+        return "ok"
+    if s.startswith("ERROR:"):
+        return "error"
+    if s.startswith("WARNING:"):
+        return "warning"
+    if s.startswith("INFO:"):
+        return "info"
+    if s.startswith("QUIT:"):
+        return "quit"
     return "normal"
 
 

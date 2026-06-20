@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+    branches: ["master"]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install flask distro ruff
+
+      - name: Lint (ruff)
+        run: ruff check koet.py koet-server.py
+
+      - name: Validate JSON files
+        run: |
+          python3 -m json.tool supported_OS.json > /dev/null
+          python3 -m json.tool packages.json > /dev/null
+          python3 -m json.tool hosts.json > /dev/null || true  # optional file
+
+      - name: Smoke test — server starts and API responds
+        run: |
+          python3 koet-server.py &
+          SERVER_PID=$!
+          sleep 3
+
+          STATUS=$(curl -sf http://127.0.0.1:5002/api/status)
+          echo "status: $STATUS"
+          echo "$STATUS" | python3 -c "import sys,json; d=json.load(sys.stdin); assert d['running']==False"
+
+          HOSTS=$(curl -sf http://127.0.0.1:5002/api/hosts)
+          echo "hosts: $HOSTS"
+          echo "$HOSTS" | python3 -c "import sys,json; json.load(sys.stdin)"
+
+          curl -sf http://127.0.0.1:5002/ | grep -q "KOET"
+
+          kill $SERVER_PID
