@@ -1,4 +1,4 @@
-This tool will run a network test across multiple nodes and compare the results against IBM Spectrum Scale Key Performance Indicators (KPI).
+This tool will run a network test across multiple nodes and compare the results against IBM Storage Scale Key Performance Indicators (KPI).
 This tool attempts to hide much of the complexity of running network measurement tools, and present the results in an easy to interpret way.
 
 **NOTE:** This test can require a long time to execute, depending on the number of nodes. This tool will display an estimated  runtime at startup.
@@ -54,15 +54,15 @@ Remarks:
   - This tool returns 0 if all tests are passed in all nodes, and returns an integer > 0 if any errors are detected.
   - TCP port 6668 needs to be reachable and not in use in all nodes.
   - Firewalld must be not running during the test.
-  - This tool needs to be run on a local filesystem. No NFS, Spectrum Scale or alike.
+  - This tool needs to be run on a local filesystem. No NFS, Storage Scale or alike.
   - For RDMA tests all Mellanox ports in the system, regardless they are part of the test or not, must be on Infiniband mode, not on Ethernet mode.
-  - When using RDMA the IP addresses to be defined into the test should be the ones that would be part of the admin network on Spectrum Scale. When not using RDMA should be the ones to be on the daemon network.
+  - When using RDMA the IP addresses to be defined into the test should be the ones that would be part of the admin network on Storage Scale. When not using RDMA should be the ones to be on the daemon network.
   - When using RDMA ports that are tested must be up as shown by [*ibdev2netdev*](https://community.mellanox.com/s/article/ibdev2netdev)
   - When using RedHat Enterprise Linux 8 series you **must** select a default python version with the command: *alternatives --config python*
   - When you set a bond device on top of RDMA devices, be sure that ''ibdev2netdev'' reports only ib names not bond names. If it shows bond devices port, those will find as down by this tool
 
 
-To run the test without a JSON file already populated with the Spectrum Scale daemon IP (if RDMA use the admin ones) addresses and generating one JSON for future runs:
+To run the test without a JSON file already populated with the Storage Scale daemon IP (if RDMA use the admin ones) addresses and generating one JSON for future runs:
 
 ```shell
 # ./koet.py --hosts 10.10.12.92,10.10.12.93,10.10.12.94,10.10.12.95 --save-hosts
@@ -134,7 +134,7 @@ JSON files versions:
 	packages: 		1.1
 	packages RDMA:		1.0
 
-Please use https://github.com/IBM/SpectrumScale_NETWORK_READINESS to get latest versions and report issues about this tool.
+Please use https://github.com/cdmaestas/SpectrumScale_NETWORK_READINESS to get latest versions and report issues about this tool.
 
 The purpose of KOET is to obtain IPv4 network metrics for a number of nodes.
 
@@ -153,7 +153,7 @@ This test run estimation is 336 minutes
 This software comes with absolutely no warranty of any kind. Use it at your own risk
 
 NOTE: The bandwidth numbers shown in this tool are for a very specific test. This is not a storage benchmark.
-They do not necessarily reflect the numbers you would see with Spectrum Scale and your particular workload
+They do not necessarily reflect the numbers you would see with Storage Scale and your particular workload
 
 Do you want to continue? (y/n):
 ```
@@ -188,7 +188,7 @@ This test run estimation is 50 minutes
 This software comes with absolutely no warranty of any kind. Use it at your own risk
 
 NOTE: The bandwidth numbers shown in this tool are for a very specific test. It is not a storage benchmark.
-They do not necessarily reflect that numbers you would see with Spectrum Scale and your particular workload
+They do not necessarily reflect that numbers you would see with Storage Scale and your particular workload
 
 Do you want to continue? (y/n): y
 ```
@@ -332,7 +332,7 @@ JSON files versions:
 	packages: 		1.1
 	packages RDMA:		1.0
 
-Please use https://github.com/IBM/SpectrumScale_NETWORK_READINESS to get latest versions and report issues about this tool.
+Please use https://github.com/cdmaestas/SpectrumScale_NETWORK_READINESS to get latest versions and report issues about this tool.
 
 The purpose of KOET is to obtain IPv4 network metrics for a number of nodes.
 
@@ -351,7 +351,7 @@ This test run estimation is 336 minutes
 This software comes with absolutely no warranty of any kind. Use it at your own risk
 
 NOTE: The bandwidth numbers shown in this tool are for a very specific test. This is not a storage benchmark.
-They do not necessarily reflect the numbers you would see with Spectrum Scale and your particular workload
+They do not necessarily reflect the numbers you would see with Storage Scale and your particular workload
 
 Do you want to continue? (y/n): y
 

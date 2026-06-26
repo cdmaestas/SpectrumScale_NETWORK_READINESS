@@ -35,7 +35,7 @@ PERF_RUNTIME = 1200  # Acceptance value should be 1200 or more
 MIN_NSD_THROUGHPUT = 2000  # Acceptance value with lots of margin
 
 # GITHUB URL
-GIT_URL = "https://github.com/IBM/SpectrumScale_NETWORK_READINESS"
+GIT_URL = "https://github.com/cdmaestas/SpectrumScale_NETWORK_READINESS"
 
 # IP RE
 IPPATT = re.compile(r'.*inet\s+(?P<ip>.*)\/\d+')
@@ -298,7 +298,7 @@ def show_header(koet_h_version, json_version,
               "specific test. This is not a storage benchmark." + NOCOLOR)
         print(RED +
               "They do not necessarily reflect the numbers you would see with "
-              "Spectrum Scale and your particular workload" + NOCOLOR)
+              "Storage Scale and your particular workload" + NOCOLOR)
         print("")
         run_this = input("Do you want to continue? (y/n): ")
         if run_this.lower() == 'y':
