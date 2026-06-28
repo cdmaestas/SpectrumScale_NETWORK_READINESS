@@ -125,6 +125,7 @@ def parse_arguments():
         action='store',
         dest='hosts',
         help='IP addresses of hosts on CSV format. '
+             'Hostnames are resolved to IPv4 automatically. '
              'Using this overrides the hosts.json file.',
         metavar='HOSTS_CSV',
         type=str,
@@ -611,12 +612,26 @@ def is_IP_address(ip):
         fatal("cannot check IP address " + ip + "\n")
 
 
-def check_hosts_are_ips(hosts_dictionary):
-    for host in hosts_dictionary.keys():
-        if not is_IP_address(host):
-            fatal("on hosts JSON file or CLI parameter '" + host +
-                  "' is not a valid IPv4. Fix before running this tool "
-                  "again.\n")
+def resolve_hosts(hosts_dictionary):
+    """Resolve any hostnames in hosts_dictionary to IPv4 addresses.
+
+    Returns a new dictionary with IP keys. Hostnames are resolved via DNS;
+    entries that are already valid IPv4 addresses pass through unchanged.
+    Exits with a fatal error if any entry cannot be resolved.
+    """
+    resolved = {}
+    for host, role in hosts_dictionary.items():
+        if is_IP_address(host):
+            resolved[host] = role
+        else:
+            try:
+                ip = socket.gethostbyname(host)
+                print(GREEN + "OK: " + NOCOLOR + "resolved " + host + " -> " + ip)
+                resolved[ip] = role
+            except socket.gaierror:
+                fatal("cannot resolve hostname '" + host +
+                      "' to an IPv4 address. Check DNS or use an IP directly.\n")
+    return resolved
 
 
 def check_hosts_number(hosts_dictionary):
@@ -1234,7 +1249,7 @@ def main():
     if not cli_hosts:
         hosts_dictionary = load_json("hosts.json")
 
-    check_hosts_are_ips(hosts_dictionary)
+    hosts_dictionary = resolve_hosts(hosts_dictionary)
     check_hosts_number(hosts_dictionary)
 
     json_version = get_json_versions(
