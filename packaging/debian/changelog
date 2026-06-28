@@ -1,0 +1,9 @@
+koet (1.18.0-1) stable; urgency=medium
+
+  * Initial packaged release.
+  * Includes web UI (koet-ui) with Flask backend and IBM Carbon Design System frontend.
+  * Added RHEL 9/10 and Rocky Linux 8/9/10 support.
+  * Added forward-compatibility for unknown point releases via major-version fallback.
+  * Modernized Python stack: dropped Python 2 dead code, uses distro, pathlib, statistics.
+
+ -- cdmaestas <cdmaestas@gmail.com>  Fri, 19 Jun 2026 18:00:00 -0600

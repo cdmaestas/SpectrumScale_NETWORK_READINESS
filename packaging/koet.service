@@ -1,0 +1,16 @@
+[Unit]
+Description=KOET — IBM Storage Scale Network Readiness Web UI
+Documentation=https://github.com/cdmaestas/SpectrumScale_NETWORK_READINESS
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/koet-ui
+Restart=on-failure
+RestartSec=5
+# Bind to loopback only — access via SSH tunnel from your workstation
+Environment=PORT=5002
+# Must run as root: koet.py uses SSH root access to cluster nodes
+
+[Install]
+WantedBy=multi-user.target

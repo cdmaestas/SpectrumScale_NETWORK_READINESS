@@ -1,0 +1,19 @@
+Package: koet
+Version: 1.18.0
+Section: utils
+Priority: optional
+Architecture: all
+Depends: python3 (>= 3.8) | python3.9 | python3.11 | python3.12, python3-venv, fping, psmisc, iproute2
+Recommends: python3-pip, gcc
+Maintainer: cdmaestas <cdmaestas@gmail.com>
+Homepage: https://github.com/cdmaestas/SpectrumScale_NETWORK_READINESS
+Description: IBM Storage Scale Network Readiness Tool with Web UI
+ KOET (Keep On Executing Tests) validates IBM Storage Scale network readiness
+ by running fping latency tests and nsdperf throughput tests across cluster
+ nodes, then comparing results against IBM KPIs.
+ .
+ Includes a web UI (koet-ui) for browser-based test configuration, live
+ streaming output, and Chart.js results visualization.
+ .
+ Start with: koet-ui  (then open http://127.0.0.1:5002)
+ Or via SSH tunnel: ssh -L 5002:127.0.0.1:5002 root@this-node

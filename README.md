@@ -5,20 +5,36 @@ This tool attempts to hide much of the complexity of running network measurement
 
 **WARNING:** This is a network stress tool, hence it will stress the network. If you are using the network for some other service while running this tool you might feel service degradation. This tool, as stated on the license, it comes with no warranty of any kind.
 
+## Quick Start
+
+**From a git clone (no install required):**
+```shell
+git clone https://github.com/cdmaestas/SpectrumScale_NETWORK_READINESS
+cd SpectrumScale_NETWORK_READINESS
+./start.sh          # installs Flask/distro if missing, starts the web UI
+```
+Then open **http://127.0.0.1:5002** in a browser on the same machine.
+
+**From an SSH tunnel (workstation browser → cluster node):**
+```shell
+ssh -L 5002:127.0.0.1:5002 root@cluster-node
+# on the node:
+./start.sh
+```
+
+**Install as an RPM or DEB package:**
+```shell
+cd packaging
+./build-pkg.sh                              # builds dist/koet-*.rpm and dist/koet_*.deb
+sudo dnf install dist/koet-1.18.0-1.noarch.rpm   # RHEL / Rocky
+sudo apt install ./dist/koet_1.18.0-1_all.deb    # Debian / Ubuntu
+koet-ui                                     # start the web UI
+sudo systemctl enable --now koet            # optionally run as a service
+```
+
 ## Web UI
 
 A browser-based interface is available for configuring and running tests without using the CLI directly.
-
-**Additional prerequisites for the Web UI:**
-```shell
-pip3 install flask
-```
-
-**Start the web server:**
-```shell
-python3 koet-server.py
-```
-Then open **http://127.0.0.1:5002** in a browser on the same machine.
 
 The web UI provides:
 - **Configure panel** — set KPI thresholds, host IPs, RDMA ports, and edit `hosts.json` directly in the browser
