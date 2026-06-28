@@ -674,18 +674,19 @@ def create_log_dir(hosts_dictionary, log_dir_timestamp):
 
 
 def latency_test(hosts_dictionary, logdir, fping_count):
-    fping_count_str = str(fping_count)
-    hosts_fping = " ".join(sorted(hosts_dictionary.keys()))
+    sorted_hosts = sorted(hosts_dictionary.keys())
 
-    for srchost in sorted(hosts_dictionary.keys()):
+    for srchost in sorted_hosts:
         print("")
         print("Starting ping run from " + srchost + " to all nodes")
         fileurl = str(Path(logdir) / ("lat_" + srchost + "_all"))
-        command = ("ssh -o StrictHostKeyChecking=no -o LogLevel=error " +
-                   srchost + " fping -C " + fping_count_str +
-                   " -q -A " + hosts_fping)
+        cmd = [
+            "ssh", "-o", "StrictHostKeyChecking=no", "-o", "LogLevel=error",
+            srchost,
+            "fping", "-C", str(fping_count), "-q", "-A",
+        ] + sorted_hosts
         with open(fileurl, 'wb', 0) as logfping:
-            runfping = subprocess.Popen(shlex.split(command),
+            runfping = subprocess.Popen(cmd,
                                         stderr=subprocess.STDOUT,
                                         stdout=logfping)
             runfping.wait()

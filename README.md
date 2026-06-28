@@ -46,15 +46,22 @@ The web server binds to `127.0.0.1` only and is not accessible from other machin
 
 ## CLI Usage
 
-**Run with host IPs specified on the command line (saves hosts.json for future runs):**
+**Run with hosts specified on the command line (saves hosts.json for future runs):**
 ```shell
+# IPs or hostnames — both work
 ./koet.py --hosts 10.10.12.92,10.10.12.93,10.10.12.94,10.10.12.95 --save-hosts
+./koet.py --hosts node1,node2,node3,node4 --save-hosts
 ```
 
 **Run using a pre-populated hosts.json:**
 ```shell
 ./koet.py
 ```
+`hosts.json` accepts either IP addresses or hostnames as keys:
+```json
+{"node1": "ECE", "node2": "ECE", "node3": "ECE", "node4": "ECE"}
+```
+Hostnames are resolved to IPv4 via DNS at startup and logged: `OK: resolved node1 -> 10.10.12.92`.
 
 **RDMA test (checks ib0 and ib1 on all nodes):**
 ```shell
@@ -71,7 +78,7 @@ optional arguments:
   -h, --help            show this help message and exit
   -l KPI_LATENCY        Max latency in msec (KPI minimum: 1.0)
   -c FPING_COUNT        fping count per node (KPI minimum: 500)
-  --hosts HOSTS_CSV     Comma-separated host IPs; overrides hosts.json
+  --hosts HOSTS_CSV     Comma-separated IPs or hostnames; overrides hosts.json
   -m KPI_THROUGHPUT     Min throughput in MB/sec (KPI minimum: 2000)
   -p PERF_RUNTIME       nsdperf runtime in seconds (KPI minimum: 1200)
   --rdma PORTS_CSV      Enable RDMA and specify ports (e.g. ib0,ib1)

@@ -89,3 +89,7 @@ Changelog:
     - Added web UI: koet-server.py (Flask backend on 127.0.0.1:5002) and koet-ui.html
       (IBM Carbon Design System dark theme frontend) for browser-based test configuration,
       live streaming output, and results visualization with Chart.js charts
+    - Added hostname resolution: hostnames are now accepted anywhere IPs were required
+      (hosts.json, --hosts CSV, web UI); resolved to IPv4 via DNS before use
+    - Added packaging: start.sh launcher, RPM spec, DEB control, systemd service
+    - Renamed Spectrum Scale → Storage Scale throughout
