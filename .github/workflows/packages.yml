@@ -13,7 +13,7 @@ jobs:
     name: Build RPM + DEB
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.2.2
 
       - name: Install build tools
         run: |
@@ -29,14 +29,14 @@ jobs:
         run: ls -lh dist/
 
       - name: Upload RPM
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: koet-rpm
           path: dist/*.rpm
           if-no-files-found: error
 
       - name: Upload DEB
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: koet-deb
           path: dist/*.deb
@@ -48,10 +48,10 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.2.2
 
       - name: Download DEB
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v4.3.0
         with:
           name: koet-deb
           path: dist/
@@ -85,10 +85,10 @@ jobs:
     needs: build
     runs-on: ubuntu-24.04-arm
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.2.2
 
       - name: Download DEB
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v4.3.0
         with:
           name: koet-deb
           path: dist/
@@ -126,18 +126,18 @@ jobs:
       contents: write
     steps:
       - name: Download RPM
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v4.3.0
         with:
           name: koet-rpm
           path: dist/
 
       - name: Download DEB
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v4.3.0
         with:
           name: koet-deb
           path: dist/
 
       - name: Upload to GitHub release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v2.3.2
         with:
           files: dist/*
