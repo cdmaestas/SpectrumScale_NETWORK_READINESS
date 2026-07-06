@@ -1,0 +1,153 @@
+.TH KOET 8 "2026-06-19" "1.18.0" "IBM Storage Scale Network Readiness"
+.SH NAME
+koet \- IBM Storage Scale network readiness test (Keep On Executing Tests)
+.SH SYNOPSIS
+.B koet.py
+[\fB\-l\fR \fIKPI_LATENCY\fR]
+[\fB\-c\fR \fIFPING_COUNT\fR]
+[\fB\-m\fR \fIKPI_THROUGHPUT\fR]
+[\fB\-p\fR \fIPERF_RUNTIME\fR]
+[\fB\-\-hosts\fR \fIHOSTS_CSV\fR]
+[\fB\-\-rdma\fR \fIPORTS_CSV\fR]
+[\fB\-\-rpm_check_disabled\fR]
+[\fB\-\-save\-hosts\fR]
+[\fB\-v\fR]
+.SH DESCRIPTION
+.B koet.py
+validates IBM Storage Scale network readiness by running fping ICMP latency tests
+and nsdperf TCP/RDMA throughput tests across all cluster nodes, then comparing
+results against IBM Key Performance Indicators (KPIs).
+.PP
+The tool must be run as
+.B root
+from a node that is itself part of the cluster being tested.
+Root passwordless SSH must be configured from this node to all other nodes.
+.PP
+Hostnames and IP addresses are both accepted for node identification.
+Hostnames are resolved to IPv4 addresses via DNS at startup.
+.SH OPTIONS
+.TP
+.BR \-l ", " \-\-latency " " \fIKPI_LATENCY\fR
+Maximum acceptable average ICMP latency in milliseconds.
+The KPI certification threshold is
+.B 1.0
+msec (default: 1.0).
+.TP
+.BR \-c ", " \-\-fping_count " " \fIFPING_COUNT\fR
+Number of fping pings per node per test.
+The KPI certification minimum is
+.B 500
+(default: 500, minimum: 2).
+.TP
+.BR \-m ", " \-\-min_throughput " " \fIKPI_THROUGHPUT\fR
+Minimum acceptable throughput per node in MB/sec.
+The KPI certification minimum is
+.B 2000
+MB/sec (default: 2000).
+.TP
+.BR \-p ", " \-\-perf_runtime " " \fIPERF_RUNTIME\fR
+Duration of each nsdperf throughput test in seconds.
+The KPI certification minimum is
+.B 1200
+seconds (default: 1200, minimum: 10).
+.TP
+.BR \-\-hosts " " \fIHOSTS_CSV\fR
+Comma-separated list of host IPs or hostnames to test.
+Overrides
+.I hosts.json.
+Hostnames are resolved to IPv4 automatically.
+.TP
+.BR \-\-rdma " " \fIPORTS_CSV\fR
+Enable RDMA mode. Comma-separated list of InfiniBand port names to test
+(e.g.\&
+.IR ib0,ib1 ).
+Must use OS device names, not mlx names.
+.TP
+.B \-\-rpm_check_disabled
+Skip the RPM prerequisite check. Use only if prerequisites are installed
+by means other than RPM.
+.TP
+.B \-\-save\-hosts
+Write (or overwrite)
+.I hosts.json
+with the hosts passed via
+.BR \-\-hosts .
+Does not prompt for confirmation.
+.TP
+.B \-v
+Show the program version number and exit.
+.SH FILES
+.TP
+.I hosts.json
+JSON file mapping host IPs or hostnames to their role (typically
+.BR ECE ).
+Located in the same directory as
+.IR koet.py .
+.TP
+.I supported_OS.json
+JSON file listing supported operating system versions.
+.TP
+.I packages.json
+JSON file listing required RPM packages.
+.TP
+.I packages_rdma.json
+JSON file listing required RDMA packages (RHEL 7 series).
+.TP
+.I packages_rdma_rh8.json
+JSON file listing required RDMA packages (RHEL 8+ and Rocky Linux).
+.TP
+.I log/YYYY-MM-DD_HH-MM-SS/
+Log directory created for each run, containing raw fping output,
+nsdperf JSON results, and a throughput CSV.
+.SH REQUIREMENTS
+.IP \(bu 4
+Red Hat Enterprise Linux 7.6+, 8.6+, 9.x, 10.x or Rocky Linux 8.6+, 9.x, 10.x
+.IP \(bu 4
+Root passwordless SSH from the local node to all cluster nodes
+.IP \(bu 4
+Packages installed on all nodes: fping, gcc-c++, psmisc, iproute
+.IP \(bu 4
+TCP port 6668 free and reachable on all nodes
+.IP \(bu 4
+firewalld stopped on all nodes during the test
+.IP \(bu 4
+Local filesystem (not NFS or Storage Scale) for running the tool
+.SH EXIT STATUS
+.TP
+.B 0
+All tests passed on all nodes.
+.TP
+.B >0
+One or more tests failed.
+.SH EXAMPLES
+Run with hosts from hosts.json:
+.PP
+.RS
+.B koet.py
+.RE
+.PP
+Run with explicit hosts (saved for future runs):
+.PP
+.RS
+.B koet.py \-\-hosts node1,node2,node3,node4 \-\-save\-hosts
+.RE
+.PP
+Run with custom KPIs:
+.PP
+.RS
+.B koet.py \-l 0.5 \-c 1000 \-m 3000 \-p 1200
+.RE
+.PP
+Run RDMA test:
+.PP
+.RS
+.B koet.py \-\-rdma ib0,ib1
+.RE
+.SH SEE ALSO
+.BR koet-ui (1),
+.BR fping (8),
+.BR ssh (1)
+.SH BUGS
+Report issues at https://github.com/cdmaestas/SpectrumScale_NETWORK_READINESS/issues
+.SH AUTHORS
+Originally developed by IBM. Maintained by cdmaestas.

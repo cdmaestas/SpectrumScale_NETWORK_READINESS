@@ -34,16 +34,20 @@ Or run the CLI directly:
 install -d %{buildroot}/usr/lib/koet
 install -d %{buildroot}/usr/bin
 install -d %{buildroot}/usr/lib/systemd/system
+install -d %{buildroot}/usr/share/man/man1
+install -d %{buildroot}/usr/share/man/man8
 
 install -m 0755 %{_sourcedir}/koet.py          %{buildroot}/usr/lib/koet/koet.py
 install -m 0755 %{_sourcedir}/koet-server.py   %{buildroot}/usr/lib/koet/koet-server.py
 install -m 0644 %{_sourcedir}/koet-ui.html     %{buildroot}/usr/lib/koet/koet-ui.html
 install -m 0644 %{_sourcedir}/supported_OS.json %{buildroot}/usr/lib/koet/supported_OS.json
 install -m 0644 %{_sourcedir}/packages.json    %{buildroot}/usr/lib/koet/packages.json
-install -m 0644 %{_sourcedir}/packages_rdma_rh7.json %{buildroot}/usr/lib/koet/packages_rdma_rh7.json
+install -m 0644 %{_sourcedir}/packages_rdma.json %{buildroot}/usr/lib/koet/packages_rdma.json
 install -m 0644 %{_sourcedir}/packages_rdma_rh8.json %{buildroot}/usr/lib/koet/packages_rdma_rh8.json
 install -m 0755 %{_sourcedir}/koet-wrapper     %{buildroot}/usr/bin/koet-ui
 install -m 0644 %{_sourcedir}/koet.service     %{buildroot}/usr/lib/systemd/system/koet.service
+install -m 0644 %{_sourcedir}/koet-ui.1.gz     %{buildroot}/usr/share/man/man1/koet-ui.1.gz
+install -m 0644 %{_sourcedir}/koet.8.gz        %{buildroot}/usr/share/man/man8/koet.8.gz
 
 %post
 VENV=/usr/lib/koet/venv
@@ -88,7 +92,9 @@ fi
 /usr/lib/koet/koet-ui.html
 /usr/lib/koet/supported_OS.json
 /usr/lib/koet/packages.json
-/usr/lib/koet/packages_rdma_rh7.json
+/usr/lib/koet/packages_rdma.json
 /usr/lib/koet/packages_rdma_rh8.json
 /usr/bin/koet-ui
 /usr/lib/systemd/system/koet.service
+%{_mandir}/man1/koet-ui.1.gz
+%{_mandir}/man8/koet.8.gz

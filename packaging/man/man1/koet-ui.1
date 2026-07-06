@@ -1,0 +1,88 @@
+.TH KOET-UI 1 "2026-06-19" "1.18.0" "IBM Storage Scale Network Readiness"
+.SH NAME
+koet-ui \- web UI backend for the KOET network readiness tool
+.SH SYNOPSIS
+.B koet-ui
+[\fBPORT=\fR\fIport\fR]
+.SH DESCRIPTION
+.B koet-ui
+starts the KOET web UI backend server, which provides a browser-based interface
+for configuring, running, and reviewing results from
+.BR koet (8).
+.PP
+The server binds exclusively to
+.B 127.0.0.1
+(localhost) and is not accessible from other machines without an SSH tunnel.
+Once started, open
+.B http://127.0.0.1:5002
+in a browser on the same machine.
+.PP
+The web UI provides five panels:
+.TP
+.B Configure
+Set KPI thresholds, host IPs or hostnames, RDMA ports, and edit
+.I hosts.json
+directly in the browser.
+.TP
+.B Run
+Review the full configuration and estimated runtime, then start or stop the test.
+.TP
+.B Live Output
+Color-coded streaming terminal output with a phase progress bar.
+An inline confirmation widget handles the interactive
+.I Do you want to continue?
+prompt from
+.BR koet (8).
+.TP
+.B Results
+Chart.js bar charts for per-host throughput and latency, plus a KPI pass/fail
+summary table. Results are loaded automatically after each run.
+.TP
+.B Log History
+List and reload results from any previous run stored in the
+.I log/
+directory.
+.SH ENVIRONMENT
+.TP
+.B PORT
+TCP port to listen on. Defaults to
+.BR 5002 .
+.SH FILES
+.TP
+.I /usr/lib/koet/koet-server.py
+The Flask backend server started by this command.
+.TP
+.I /usr/lib/koet/koet-ui.html
+The single-file frontend served at
+.IR http://127.0.0.1:5002/ .
+.TP
+.I /usr/lib/koet/hosts.json
+Host list read and written by the Configure panel.
+.SH EXAMPLES
+Start on the default port:
+.PP
+.RS
+.B koet-ui
+.RE
+.PP
+Start on a custom port:
+.PP
+.RS
+.B PORT=5003 koet-ui
+.RE
+.PP
+Access from a remote workstation via SSH tunnel:
+.PP
+.RS
+.B ssh \-L 5002:127.0.0.1:5002 root@cluster-node
+.RE
+Then open
+.B http://127.0.0.1:5002
+in a local browser.
+.SH SEE ALSO
+.BR koet (8),
+.BR systemctl (1)
+.SH BUGS
+Report issues at https://github.com/cdmaestas/SpectrumScale_NETWORK_READINESS/issues
+.SH AUTHORS
+Originally developed by IBM. Maintained by cdmaestas.
