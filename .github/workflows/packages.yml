@@ -18,12 +18,34 @@ jobs:
       - name: Install build tools
         run: |
           sudo apt-get update -q
-          sudo apt-get install -y rpm dpkg-dev
+          sudo apt-get install -y rpm dpkg-dev rpm-sign
 
       - name: Build packages
         run: |
           cd packaging
           bash build-pkg.sh
+
+      - name: Sign RPM
+        if: env.RPM_GPG_PRIVATE_KEY != ''
+        env:
+          RPM_GPG_PRIVATE_KEY: ${{ secrets.RPM_GPG_PRIVATE_KEY }}
+          RPM_GPG_KEY_ID: ${{ secrets.RPM_GPG_KEY_ID }}
+        run: |
+          echo "$RPM_GPG_PRIVATE_KEY" | gpg --batch --import
+
+          cat > ~/.rpmmacros <<EOF
+          %_gpg_name $RPM_GPG_KEY_ID
+          %_gpg_path $HOME/.gnupg
+          %__gpg /usr/bin/gpg
+          %__gpg_sign_cmd %{__gpg} gpg --batch --no-verbose --no-armor \
+            --passphrase-fd 3 --no-secmem-warning -u "%{_gpg_name}" \
+            -sbo %{__signature_filename} --digest-algo sha256 %{__plaintext_filename}
+          EOF
+
+          rpm --addsign dist/*.rpm
+
+          # Export public key for users to verify packages
+          gpg --armor --export "$RPM_GPG_KEY_ID" > dist/koet-rpm-key.asc
 
       - name: List artifacts
         run: ls -lh dist/
@@ -32,7 +54,9 @@ jobs:
         uses: actions/upload-artifact@v4.6.2
         with:
           name: koet-rpm
-          path: dist/*.rpm
+          path: |
+            dist/*.rpm
+            dist/*.asc
           if-no-files-found: error
 
       - name: Upload DEB
