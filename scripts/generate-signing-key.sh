@@ -29,9 +29,18 @@ Expire-Date: 0
 %commit
 EOF
 
-# Get the fingerprint of the key we just created
-FINGERPRINT=$(gpg --list-secret-keys --keyid-format LONG "$KEY_EMAIL" 2>/dev/null \
-  | grep "^sec" | head -1 | awk '{print $2}' | cut -d'/' -f2)
+# Get the fingerprint of the key we just created (match by name+email)
+FINGERPRINT=$(gpg --list-secret-keys --keyid-format LONG \
+    --with-colons 2>/dev/null \
+  | awk -F: -v name="$KEY_NAME" '
+      /^uid/ && $10 ~ name { found=1 }
+      /^sec/ { key=$5; found=0 }
+      found && key { print key; found=0 }
+    ' | head -1)
+if [[ -z "$FINGERPRINT" ]]; then
+  FINGERPRINT=$(gpg --list-secret-keys --keyid-format LONG 2>/dev/null \
+    | grep -A2 "$KEY_NAME" | grep "^sec" | awk '{print $2}' | cut -d'/' -f2)
+fi
 
 echo "==> Key fingerprint: $FINGERPRINT"
 
