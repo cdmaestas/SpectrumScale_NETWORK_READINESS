@@ -1,5 +1,5 @@
 Name:           koet
-Version:        1.18.0
+Version:        1.18.2
 Release:        1%{?dist}
 Summary:        IBM Storage Scale Network Readiness Tool with Web UI
 License:        Apache-2.0

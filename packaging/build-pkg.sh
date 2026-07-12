@@ -10,15 +10,15 @@
 #   RPM: rpmbuild  (sudo dnf install rpm-build  OR  sudo apt install rpm)
 #   DEB: dpkg-deb  (sudo apt install dpkg-dev   OR  brew install dpkg)
 #
-# Output: dist/koet-1.18.0-1.noarch.rpm
-#         dist/koet_1.18.0-1_all.deb
+# Output: dist/koet-1.18.2-1.noarch.rpm
+#         dist/koet_1.18.2-1_all.deb
 
 set -euo pipefail
 
 PKG_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(dirname "$PKG_DIR")"
 DIST="$ROOT/dist"
-VERSION="1.18.0"
+VERSION="1.18.2"
 RELEASE="1"
 
 BUILD_RPM=true
