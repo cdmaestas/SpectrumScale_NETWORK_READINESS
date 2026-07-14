@@ -4,7 +4,6 @@ import sys
 import time
 import getopt
 import json
-import math
 import re
 import threading
 import subprocess
@@ -390,7 +389,7 @@ def chkcmdLiveOutput(cmd):
         line = p.stdout.readline()
         rc = p.poll()
         line = line.rstrip()
-        if (rc != None and (line == '' or line == b'')):
+        if (rc is not None and (line == '' or line == b'')):
             break
         if PYTHON3:
             strline = ''.join(chr(x) for x in line)
@@ -495,7 +494,7 @@ for op, value in opts:
     elif op in ("-p", "--rdmaPorts"):
         try:
             conf["rdmaPorts"] = json.loads(str(value))
-        except Exception as e:
+        except Exception:
             log("I get non-json format --rdmaPorts input: <%s>" % value)
             log("Set it to be the RDMA ports for all nodes")
             rdmaPorts = {}

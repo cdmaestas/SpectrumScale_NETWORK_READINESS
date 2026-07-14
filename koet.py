@@ -5,7 +5,6 @@ import sys
 import socket
 import datetime
 import subprocess
-import shlex
 import time
 from shutil import copyfile
 from decimal import Decimal
@@ -41,7 +40,7 @@ GIT_URL = "https://github.com/cdmaestas/SpectrumScale_NETWORK_READINESS"
 IPPATT = re.compile(r'.*inet\s+(?P<ip>.*)\/\d+')
 
 # This script version, independent from the JSON versions
-KOET_VERSION = "1.17"
+KOET_VERSION = "1.18.2"
 
 
 def fatal(msg):
@@ -52,8 +51,8 @@ def load_json(json_file_str):
     try:
         with open(json_file_str, "r") as json_file:
             return json.load(json_file)
-    except Exception:
-        fatal("Cannot open JSON file: " + json_file_str)
+    except Exception as e:
+        fatal("Cannot open JSON file: " + json_file_str + ": " + str(e))
 
 
 def json_file_loads(json_file_str):
@@ -71,17 +70,17 @@ def write_json_file_from_dictionary(hosts_dictionary, json_file_str):
             json.dump(hosts_dictionary, json_file)
             print(GREEN + "OK: " + NOCOLOR + "JSON file: " + json_file_str +
                   " [over]written")
-    except Exception:
-        fatal("Cannot write JSON file: " + json_file_str)
+    except Exception as e:
+        fatal("Cannot write JSON file: " + json_file_str + ": " + str(e))
 
 
 def check_localnode_is_in(hosts_dictionary):
     try:
         result = subprocess.run(['ip', 'addr', 'show'],
-                                capture_output=True, text=True)
+                                capture_output=True, text=True, check=True)
         raw_out = result.stdout
-    except Exception:
-        fatal("cannot list ip address on local node\n")
+    except Exception as e:
+        fatal("cannot list ip address on local node: " + str(e) + "\n")
     iplist = IPPATT.findall(raw_out)
     for node in hosts_dictionary.keys():
         if node in iplist:
@@ -362,8 +361,8 @@ def ssh_rpm_is_installed(host, rpm_package):
             ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'LogLevel=error',
              host, 'rpm', '-q', rpm_package],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    except Exception:
-        fatal("cannot run rpm over ssh on host " + host)
+    except Exception as e:
+        fatal("cannot run rpm over ssh on host " + host + ": " + str(e))
 
 
 def ssh_service_is_up(host, service_name):
@@ -372,8 +371,8 @@ def ssh_service_is_up(host, service_name):
             ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'LogLevel=error',
              host, 'systemctl', 'is-active', '--quiet', service_name],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    except Exception:
-        fatal("cannot run systemctl over ssh on host " + host)
+    except Exception as e:
+        fatal("cannot run systemctl over ssh on host " + host + ": " + str(e))
     return return_code == 0
 
 
@@ -464,12 +463,20 @@ def ssh_file_exists(host, fileurl):
 
 def ssh_rdma_ports_are_up(host, rdma_ports_list):
     errors = 0
-    for port in rdma_ports_list:
-        return_code = subprocess.call(
+    try:
+        result = subprocess.run(
             ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'LogLevel=error',
-             host, 'ibdev2netdev', '|', 'grep', port, '|', 'grep', '"(Up)"'],
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        if return_code == 0:
+             host, 'ibdev2netdev'],
+            capture_output=True, text=True)
+        output = result.stdout
+    except Exception as e:
+        fatal("cannot run ibdev2netdev over ssh on host " + host + ": " + str(e))
+    for port in rdma_ports_list:
+        port_up = any(
+            port in line and "(Up)" in line
+            for line in output.splitlines()
+        )
+        if port_up:
             print(GREEN + "OK: " + NOCOLOR +
                   "on host " + host + " the RDMA port " + port +
                   " is on UP state")
@@ -646,8 +653,8 @@ def create_local_log_dir(log_dir_timestamp):
     try:
         logdir.mkdir(parents=True)
         return str(logdir)
-    except Exception:
-        fatal("cannot create local directory " + str(logdir) + "\n")
+    except Exception as e:
+        fatal("cannot create local directory " + str(logdir) + ": " + str(e) + "\n")
 
 
 def create_log_dir(hosts_dictionary, log_dir_timestamp):
@@ -693,14 +700,13 @@ def latency_test(hosts_dictionary, logdir, fping_count):
         print("Ping run from " + srchost + " to all nodes completed")
 
 
-def throughput_test_os(command, nsd_logfile, client):
+def throughput_test_os(argv, nsd_logfile, client):
     try:
-        runperf = subprocess.Popen(shlex.split(command), stdout=nsd_logfile)
+        runperf = subprocess.Popen(argv, stdout=nsd_logfile)
         runperf.wait()
         time.sleep(5)
-    except Exception:
-        fatal("Throughput run " + client + "failed unexpectedly "
-              " when calling: " + str(command) + "\n")
+    except Exception as e:
+        fatal("Throughput run from " + client + " failed unexpectedly: " + str(e) + "\n")
 
 
 def throughput_test(hosts_dictionary, logdir, perf_runtime,
@@ -714,24 +720,23 @@ def throughput_test(hosts_dictionary, logdir, perf_runtime,
         del server_hosts_dictionary[client]
         server_csv_str = ",".join(server_hosts_dictionary.keys())
         if rdma_test:
-            command = ("./nsdperfTool.py -t read -k 4194304 -b 4194304 "
-                       "-R 32 -W 32 -T 32 -d " + logdir + " -s " +
-                       server_csv_str + " -c " + client + " -l " +
-                       str(perf_runtime) + " -p " + rdma_ports_csv_mlx)
+            argv = ["./nsdperfTool.py", "-t", "read", "-k", "4194304",
+                    "-b", "4194304", "-R", "32", "-W", "32", "-T", "32",
+                    "-d", logdir, "-s", server_csv_str, "-c", client,
+                    "-l", str(perf_runtime), "-p", rdma_ports_csv_mlx]
         else:
-            command = ("./nsdperfTool.py -t read -k 4194304 -b 4194304 "
-                       "-R 256 -W 256 -T 256 -d " + logdir + " -s " +
-                       server_csv_str + " -c " + client + " -l " +
-                       str(perf_runtime))
-        nsd_logfile = open(logdir + "/nsdperfTool_log", "a")
-        throughput_test_os(command, nsd_logfile, client)
-        nsd_logfile.close()
+            argv = ["./nsdperfTool.py", "-t", "read", "-k", "4194304",
+                    "-b", "4194304", "-R", "256", "-W", "256", "-T", "256",
+                    "-d", logdir, "-s", server_csv_str, "-c", client,
+                    "-l", str(perf_runtime)]
+        with open(logdir + "/nsdperfTool_log", "a") as nsd_logfile:
+            throughput_test_os(argv, nsd_logfile, client)
         try:
             copyfile(logdir + "/nsdperfResult.json",
                      logdir + "/nsd_" + client + ".json")
-        except Exception:
+        except Exception as e:
             print(YELLOW + "WARNING: " + NOCOLOR +
-                  "cannot copy result JSON file")
+                  "cannot copy result JSON file: " + str(e))
         print("Completed throughput run from " + client + " to all nodes")
 
     print("")
@@ -742,22 +747,21 @@ def throughput_test(hosts_dictionary, logdir, perf_runtime,
     clients_csv = ",".join(clients_nodes_d.keys())
     servers_csv = ",".join(servers_nodes_d.keys())
     if rdma_test:
-        command = ("./nsdperfTool.py -t read -k 4194304 -b 4194304 "
-                   "-R 32 -W 32 -T 32 -d " + logdir + " -s " +
-                   servers_csv + " -c " + clients_csv + " -l " +
-                   str(perf_runtime) + " -p " + rdma_ports_csv_mlx)
+        argv = ["./nsdperfTool.py", "-t", "read", "-k", "4194304",
+                "-b", "4194304", "-R", "32", "-W", "32", "-T", "32",
+                "-d", logdir, "-s", servers_csv, "-c", clients_csv,
+                "-l", str(perf_runtime), "-p", rdma_ports_csv_mlx]
     else:
-        command = ("./nsdperfTool.py -t read -k 4194304 -b 4194304 "
-                   "-R 256 -W 256 -T 256 -d " + logdir + " -s " +
-                   servers_csv + " -c " + clients_csv + " -l " +
-                   str(perf_runtime))
-    nsd_logfile = open(logdir + "/nsdperfTool_log", "a")
-    throughput_test_os(command, nsd_logfile, client)
-    nsd_logfile.close()
+        argv = ["./nsdperfTool.py", "-t", "read", "-k", "4194304",
+                "-b", "4194304", "-R", "256", "-W", "256", "-T", "256",
+                "-d", logdir, "-s", servers_csv, "-c", clients_csv,
+                "-l", str(perf_runtime)]
+    with open(logdir + "/nsdperfTool_log", "a") as nsd_logfile:
+        throughput_test_os(argv, nsd_logfile, client)
     try:
         copyfile(logdir + "/nsdperfResult.json", logdir + "/nsd_mess.json")
-    except Exception:
-        print(YELLOW + "WARNING: " + NOCOLOR + "cannot copy result JSON file")
+    except Exception as e:
+        print(YELLOW + "WARNING: " + NOCOLOR + "cannot copy result JSON file: " + str(e))
     print("Completed many to many nodes throughput test")
     return clients_nodes_d
 

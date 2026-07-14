@@ -93,3 +93,19 @@ Changelog:
       (hosts.json, --hosts CSV, web UI); resolved to IPv4 via DNS before use
     - Added packaging: start.sh launcher, RPM spec, DEB control, systemd service
     - Renamed Spectrum Scale → Storage Scale throughout
+
+- 1.18.2
+    - Hardening pass: all bare `except Exception` blocks now surface the error message
+    - Fixed correctness bug: ssh_rdma_ports_are_up was passing pipe characters as literal
+      arguments to subprocess (shell=False), so grep never ran; rewritten to capture
+      ibdev2netdev output and filter in Python
+    - Converted throughput_test() command construction from string + shlex.split() to
+      list-form argv (eliminates any argument-splitting edge cases)
+    - Removed unused `import shlex` from koet.py
+    - Updated KOET_VERSION constant from "1.17" to "1.18.2"
+    - koet-server.py: /api/results now constrains log_dir to the log/ subdirectory
+      via Path.name; prevents path traversal from user-supplied query parameter
+    - koet-server.py: bare except clauses in latency/NSD parsers now log warnings
+      with specific exception type and message instead of silently continuing
+    - nsdperfTool.py: removed unused `import math`, fixed `rc != None` → `rc is not None`
+    - Git pre-commit and pre-push hooks installed (ruff, py_compile, shellcheck, JSON)

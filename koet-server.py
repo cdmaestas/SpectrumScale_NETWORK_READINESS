@@ -369,8 +369,8 @@ def _parse_latency_file(filepath):
                         vals.append(1000.0)
                 if vals:
                     results[dst_ip] = vals
-    except Exception:
-        pass
+    except OSError as e:
+        app.logger.warning("cannot read latency file %s: %s", filepath, e)
     return results
 
 
@@ -402,7 +402,7 @@ def _parse_latency(log_dir, kpi_msec):
         mins.append(round(min(all_vals), 3))
         try:
             sd = statistics.stdev(all_vals) if len(all_vals) > 1 else 0.0
-        except Exception:
+        except statistics.StatisticsError:
             sd = 0.0
         stddevs.append(round(sd, 3))
 
@@ -425,7 +425,8 @@ def _parse_nsd_files(log_dir):
     for nsd_file in sorted(log_path.glob("nsd_*.json")):
         try:
             data = json.loads(nsd_file.read_text())
-        except Exception:
+        except (OSError, json.JSONDecodeError) as e:
+            app.logger.warning("cannot parse %s: %s", nsd_file, e)
             continue
 
         stem = nsd_file.stem  # nsd_10.0.0.1 or nsd_mess
@@ -457,12 +458,11 @@ def _parse_nsd_files(log_dir):
 
 @app.route("/api/results")
 def api_results():
-    log_dir = request.args.get("log_dir", "").strip()
-    if log_dir:
-        # Allow bare directory name or full path
-        p = Path(log_dir)
-        if not p.is_absolute():
-            p = REPO_ROOT / "log" / log_dir
+    log_dir_param = request.args.get("log_dir", "").strip()
+    if log_dir_param:
+        # Strip any path separators to constrain to the log/ directory
+        bare = Path(log_dir_param).name
+        p = REPO_ROOT / "log" / bare
         log_dir = str(p)
     else:
         log_dir = _run_state.get("log_dir")
