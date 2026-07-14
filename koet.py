@@ -40,7 +40,7 @@ GIT_URL = "https://github.com/cdmaestas/SpectrumScale_NETWORK_READINESS"
 IPPATT = re.compile(r'.*inet\s+(?P<ip>.*)\/\d+')
 
 # This script version, independent from the JSON versions
-KOET_VERSION = "1.18.2"
+KOET_VERSION = "1.18.3"
 
 
 def fatal(msg):
