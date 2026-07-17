@@ -34,7 +34,7 @@ PERF_RUNTIME = 1200  # Acceptance value should be 1200 or more
 MIN_NSD_THROUGHPUT = 2000  # Acceptance value with lots of margin
 
 # GITHUB URL
-GIT_URL = "https://github.com/cdmaestas/SpectrumScale_NETWORK_READINESS"
+GIT_URL = "https://github.com/cdmaestas/StorageScale_NETWORK_READINESS"
 
 # IP RE
 IPPATT = re.compile(r'.*inet\s+(?P<ip>.*)\/\d+')

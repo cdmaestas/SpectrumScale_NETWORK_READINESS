@@ -8,8 +8,8 @@ KOET (Keep On Executing Tests) validates IBM Storage Scale network readiness by 
 
 **From a git clone (no install required):**
 ```shell
-git clone https://github.com/cdmaestas/SpectrumScale_NETWORK_READINESS
-cd SpectrumScale_NETWORK_READINESS
+git clone https://github.com/cdmaestas/StorageScale_NETWORK_READINESS
+cd StorageScale_NETWORK_READINESS
 ./start.sh          # installs Flask/distro if missing, starts the web UI
 ```
 Then open **http://127.0.0.1:5002** in a browser on the same machine.
@@ -43,6 +43,16 @@ The web UI provides:
 - **Log History panel** — load and review results from any previous run
 
 The web server binds to `127.0.0.1` only and is not accessible from other machines without an SSH tunnel.
+
+### Visual walkthrough
+
+Set the certification thresholds, hosts, and optional RDMA ports in the Configure panel. The built-in `hosts.json` editor lets you load or save the cluster node list without leaving the UI.
+
+![Configure a network-readiness test](docs/images/ui-configure.jpg)
+
+Before starting, the Run Test panel presents the selected settings and estimated duration for review. Start the test only after confirming the target hosts and runtime are appropriate for the environment.
+
+![Review the test before starting](docs/images/ui-run-review.jpg)
 
 ## CLI Usage
 
@@ -130,7 +140,7 @@ JSON files versions:
     packages:        1.1
     packages RDMA:   1.0
 
-Please use https://github.com/cdmaestas/SpectrumScale_NETWORK_READINESS to get latest versions and report issues about this tool.
+Please use https://github.com/cdmaestas/StorageScale_NETWORK_READINESS to get latest versions and report issues about this tool.
 
 The purpose of KOET is to obtain IPv4 network metrics for a number of nodes.
 
@@ -196,4 +206,4 @@ OK: All tests had been passed. You can proceed with the next steps
 
 ## Issues
 
-Please open issues at https://github.com/cdmaestas/SpectrumScale_NETWORK_READINESS/issues
+Please open issues at https://github.com/cdmaestas/StorageScale_NETWORK_READINESS/issues
